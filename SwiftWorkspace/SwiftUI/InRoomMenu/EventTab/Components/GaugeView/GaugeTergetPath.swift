@@ -1,49 +1,47 @@
 //
-//  EventSupportGaugeNextLevelLine.swift
-//  ShowRoomTest
-//
-//  Created by 山口誠士 on 2023/07/23.
+//  Created by masashi.yamaguchi on 2023/07/24
+//  Copyright © 2023 SHOWROOM Inc. All rights reserved.
 //
 
 import SwiftUI
 
-struct GaugeTergetPathModel {
+struct NextLevelTargetPathModel {
+
+    // 始点
     let startPoint: CGPoint
-    let endPoint: CGPoint
-    let isStartXLarger: Bool
+
+    // 最初の角丸
+    let firstCornerArcCenterPoint: CGPoint
     let firstCornerStartAngle: Angle
     let firstCornerEndAngle: Angle
-    let secondCornerStartAngle: Angle
-    let secondCornerEndAngle: Angle
-    let radius: CGFloat
-
-    let firstCornerArcCenterPoint: CGPoint
-    let secondCornerArcCenterPoint: CGPoint
-
-    let firstCornerArcStartPoint: CGPoint
     let firstCornerArcEndPoint: CGPoint
 
+    // ２番目の角丸
     let secondCornerArcStartPoint: CGPoint
+    let secondCornerArcCenterPoint: CGPoint
+    let secondCornerStartAngle: Angle
+    let secondCornerEndAngle: Angle
     let secondCornerArcEndPoint: CGPoint
 
+    // 終点
+    let endPoint: CGPoint
+
+    let radius: CGFloat
+    let isStartXLarger: Bool
+
     init(
-        startX: CGFloat,
+        startPoint: CGPoint,
         endX: CGFloat,
-        gaugeBarheight: CGFloat,
+        gaugeBarHeight: CGFloat,
         gaugeBarPaddingBottom: CGFloat
     ) {
-        let isStartXLarger = startX > endX
+        let isStartXLarger = startPoint.x > endX
         let defaultRadius: CGFloat = gaugeBarPaddingBottom / 2
-        let radius: CGFloat = abs(startX - endX) < defaultRadius ? abs(startX - endX) / 2 : defaultRadius
-
-        let firstCornerArcStartPoint = CGPoint(
-            x: startX,
-            y: gaugeBarheight + defaultRadius - radius
-        )
+        let radius: CGFloat = abs(startPoint.x - endX) < defaultRadius * 2 ? abs(startPoint.x - endX) / 2 : defaultRadius
 
         let firstCornerArcEndPoint = CGPoint(
-            x: isStartXLarger ? startX - radius : startX + radius,
-            y: firstCornerArcStartPoint.y + radius
+            x: isStartXLarger ? startPoint.x - radius : startPoint.x + radius,
+            y: startPoint.y + radius
         )
 
         let secondCornerArcStartPoint = CGPoint(
@@ -53,15 +51,13 @@ struct GaugeTergetPathModel {
 
         let secondCornerArcEndPoint = CGPoint(
             x: endX,
-            y: gaugeBarheight + gaugeBarPaddingBottom - (defaultRadius - radius)
+            y: firstCornerArcEndPoint.y + radius
         )
 
-        startPoint = .init(x: startX, y: 0)
-        endPoint = .init(x: endX, y: gaugeBarheight + gaugeBarPaddingBottom)
+        endPoint = .init(x: endX, y: secondCornerArcEndPoint.y + gaugeBarHeight)
         self.radius = radius
         self.isStartXLarger = isStartXLarger
 
-        self.firstCornerArcStartPoint = firstCornerArcStartPoint
         self.firstCornerArcEndPoint = firstCornerArcEndPoint
         self.secondCornerArcStartPoint = secondCornerArcStartPoint
         self.secondCornerArcEndPoint = secondCornerArcEndPoint
@@ -73,32 +69,34 @@ struct GaugeTergetPathModel {
 
         firstCornerArcCenterPoint = .init(
             x: firstCornerArcEndPoint.x,
-            y: firstCornerArcStartPoint.y
+            y: startPoint.y
         )
 
         secondCornerArcCenterPoint = .init(
             x: secondCornerArcStartPoint.x,
             y: secondCornerArcEndPoint.y
         )
+        self.startPoint = startPoint
     }
 }
 
-struct GaugeTergetPath: View {
+struct NextLevelTargetPath: View {
 
-    private let model: GaugeTergetPathModel?
+    static let coordinateSpaceName = "NextLevelTargetPathCoordinateSpaceName"
+    private let model: NextLevelTargetPathModel?
 
     init(
-        startX: CGFloat?,
+        startPoint: CGPoint?,
         endX: CGFloat?,
-        gaugeBarheight: CGFloat,
+        gaugeBarHeight: CGFloat,
         gaugeBarPaddingBottom: CGFloat
     ) {
-        if let startX = startX,
+        if let startPoint = startPoint,
            let endX = endX {
-            model = GaugeTergetPathModel(
-                startX: startX,
+            model = NextLevelTargetPathModel(
+                startPoint: startPoint,
                 endX: endX,
-                gaugeBarheight: gaugeBarheight,
+                gaugeBarHeight: gaugeBarHeight,
                 gaugeBarPaddingBottom: gaugeBarPaddingBottom
             )
         } else {
@@ -109,10 +107,6 @@ struct GaugeTergetPath: View {
     var body: some View {
         if let model = model {
             Path { path in
-                path.addLines([
-                    model.startPoint,
-                    model.firstCornerArcStartPoint
-                ])
 
                 if !model.isStartXLarger {
                     path.move(to: model.firstCornerArcEndPoint)
@@ -125,6 +119,8 @@ struct GaugeTergetPath: View {
                     endAngle: model.firstCornerEndAngle,
                     clockwise: false
                 )
+
+                path.move(to: model.firstCornerArcEndPoint)
 
                 path.addLines([
                     model.firstCornerArcEndPoint,
@@ -150,7 +146,7 @@ struct GaugeTergetPath: View {
 
             }
             .stroke(
-                Color(.black),
+                .black,
                 lineWidth: 2
             )
         } else {
@@ -158,15 +154,15 @@ struct GaugeTergetPath: View {
         }
     }
 }
-struct EventSupportGaugeNextLevelLine_Previews: PreviewProvider {
+struct NextLevelTargetPath_Previews: PreviewProvider {
     static var previews: some View {
         VStack {
             let gaugeBarPaddingBottom: CGFloat = 8
             let gaugeBarHeight: CGFloat = 10
-            GaugeTergetPath(
-                startX: 260,
-                endX: 250,
-                gaugeBarheight: gaugeBarHeight,
+            NextLevelTargetPath(
+                startPoint: .init(x: 165, y: 10),
+                endX: 190,
+                gaugeBarHeight: gaugeBarHeight,
                 gaugeBarPaddingBottom: gaugeBarPaddingBottom
             )
                 .frame(height: 40)

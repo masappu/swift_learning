@@ -13,9 +13,7 @@ struct EventSupportGaugeView: View {
     let nextLevel: Int?
     let nextLevelPoint: Int
 
-    static let delimiterCoordinateSpace = "delimiterCoordinateSpace"
-
-    @State private var delimiterStartX: CGFloat? = nil
+    @State private var startPoint: CGPoint? = nil
     @State private var delimiterEndX: CGFloat? = nil
 
     func convertStringFormatter(
@@ -29,13 +27,6 @@ struct EventSupportGaugeView: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            EventSupportGaugeBarView(
-                maxLevel: maxLevel,
-                delemiterTergetLevel: nextLevel,
-                delimiterStartX: $delimiterStartX
-            )
-                .frame(height: 10)
-
 
             HStack(spacing: 2) {
                 Text("目標")
@@ -53,7 +44,10 @@ struct EventSupportGaugeView: View {
                             GeometryReader { geometory in
                                 Color.clear
                                     .onAppear {
-                                        delimiterEndX = geometory.frame(in: .named(EventSupportGaugeView.delimiterCoordinateSpace)).midX
+                                        startPoint = .init(
+                                            x: geometory.frame(in: .named(NextLevelTargetPath.coordinateSpaceName)).midX,
+                                            y: geometory.size.height
+                                        )
                                     }
                             }
                         }
@@ -63,13 +57,21 @@ struct EventSupportGaugeView: View {
                 Text(goalPointString + "pt")
                     .font(.system(size: 13, weight: .semibold))
             }
+
+            EventSupportGaugeBarView(
+                maxLevel: maxLevel,
+                delemiterTergetLevel: nextLevel,
+                delimiterStartX: $delimiterEndX
+            )
+                .frame(height: 10)
+
         }
-        .coordinateSpace(name: EventSupportGaugeView.delimiterCoordinateSpace)
+        .coordinateSpace(name: NextLevelTargetPath.coordinateSpaceName)
         .overlay {
-            GaugeTergetPath(
-                startX: delimiterStartX,
+            NextLevelTargetPath(
+                startPoint: startPoint,
                 endX: delimiterEndX,
-                gaugeBarheight: 10,
+                gaugeBarHeight: 10,
                 gaugeBarPaddingBottom: 8
             )
         }
@@ -79,9 +81,9 @@ struct EventSupportGaugeView: View {
 struct EventSupportGaugeView_Previews: PreviewProvider {
     static var previews: some View {
         EventSupportGaugeView(
-            maxLevel: nil,
-            nextLevel: nil,
-            nextLevelPoint: 300000
+            maxLevel: 10,
+            nextLevel: 3,
+            nextLevelPoint: 500
         )
             .padding(.horizontal)
     }
